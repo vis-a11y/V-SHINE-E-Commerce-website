@@ -88,6 +88,9 @@ body {
     top: 0;
     left: 0;
 }
+#header a img {
+    background-color: #c2c2c2;
+}
 
 /* Navbar */
 #navbar {
