@@ -1,3 +1,23 @@
+// ─── API Configuration (MUST be at top before any usage) ───────────────────
+// Detect environment: if running on GitHub Pages, use static fallback data
+// If running locally with the Node.js server, use localhost API
+const IS_GITHUB_PAGES = window.location.hostname.includes('github.io') || 
+                        window.location.hostname.includes('githubusercontent.com');
+const API_URL = IS_GITHUB_PAGES ? null : 'http://localhost:5000/api';
+
+// Static fallback products shown on GitHub Pages (no backend available)
+const STATIC_PRODUCTS = [
+    { id: 1, name: 'Diamond Ring', brand: 'V-SHINE', price: 4999, image: 'image/f1.jpg' },
+    { id: 2, name: 'Gold Necklace', brand: 'V-SHINE', price: 7499, image: 'image/f2.jpg' },
+    { id: 3, name: 'Pearl Earrings', brand: 'V-SHINE', price: 2499, image: 'image/f3.jpg' },
+    { id: 4, name: 'Silver Bracelet', brand: 'V-SHINE', price: 1999, image: 'image/f4.jpg' },
+    { id: 5, name: 'Ruby Pendant', brand: 'V-SHINE', price: 5999, image: 'image/b1.jpg' },
+    { id: 6, name: 'Sapphire Ring', brand: 'V-SHINE', price: 8999, image: 'image/b2.jpg' },
+    { id: 7, name: 'Emerald Bangle', brand: 'V-SHINE', price: 3499, image: 'image/g1.jpg' },
+    { id: 8, name: 'Platinum Chain', brand: 'V-SHINE', price: 11999, image: 'image/g2.jpg' },
+];
+// ────────────────────────────────────────────────────────────────────────────
+
 // Initialize AOS (Animate On Scroll)
 AOS.init({
     duration: 1000,
@@ -234,44 +254,54 @@ document.body.addEventListener('click', (e) => {
 });
 
 // Product Fetching & Rendering
+function renderProductCards(products) {
+    const container = document.getElementById('main-products');
+    if (container && products.length > 0) {
+        container.innerHTML = products.map(product => `
+            <div class="pro">
+                <img src="${product.image}" alt="${product.name}">
+                <div class="des">
+                    <span>${product.brand}</span>
+                    <h5>${product.name}</h5>
+                    <div class="star">
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                    </div>
+                    <h4>₹${product.price}</h4>
+                </div>
+                <a href="#" class="bag"><i class="fa-solid fa-bag-shopping"></i></a>
+            </div>
+        `).join('');
+        
+        // Re-initialize tilt if needed
+        if (typeof VanillaTilt !== 'undefined') {
+            VanillaTilt.init(document.querySelectorAll(".pro"), {
+                max: 15,
+                speed: 400,
+                glare: true,
+                "max-glare": 0.2,
+            });
+        }
+    }
+}
+
 async function fetchProducts() {
+    // If on GitHub Pages (no backend), use static fallback data
+    if (IS_GITHUB_PAGES || !API_URL) {
+        renderProductCards(STATIC_PRODUCTS);
+        return;
+    }
     try {
         const response = await fetch(`${API_URL}/products`);
         const products = await response.json();
-        
-        const container = document.getElementById('main-products');
-        if (container && products.length > 0) {
-                container.innerHTML = products.map(product => `
-                    <div class="pro">
-                        <img src="${product.image}" alt="${product.name}">
-                        <div class="des">
-                            <span>${product.brand}</span>
-                            <h5>${product.name}</h5>
-                            <div class="star">
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                            </div>
-                            <h4>₹${product.price}</h4>
-                        </div>
-                        <a href="#" class="bag"><i class="fa-solid fa-bag-shopping"></i></a>
-                    </div>
-                `).join('');
-                
-                // Re-initialize tilt if needed
-                if (typeof VanillaTilt !== 'undefined') {
-                    VanillaTilt.init(document.querySelectorAll(".pro"), {
-                        max: 15,
-                        speed: 400,
-                        glare: true,
-                        "max-glare": 0.2,
-                    });
-                }
-        }
+        renderProductCards(products);
     } catch (error) {
-        console.error('Error fetching products:', error);
+        console.warn('Backend unavailable, using static product data:', error);
+        // Gracefully fall back to static products if backend is down
+        renderProductCards(STATIC_PRODUCTS);
     }
 }
 
@@ -306,8 +336,7 @@ if (MainImg && smallimg.length > 0) {
         }
     });
 }
-// Backend Integration
-const API_URL = 'http://localhost:5000/api';
+// (API_URL is defined at the top of this file)
 
 // Newsletter Form Submission
 const newsletterBtn = document.getElementById('newsletter-btn');
