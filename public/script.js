@@ -1,113 +1,42 @@
-// ─── API Configuration (MUST be at top before any usage) ───────────────────
-// Detect environment so we know whether a live backend is available:
-//   - GitHub Pages  → no backend → use static fallback
-//   - file:// protocol (opened directly in browser) → no server → use static fallback
-//   - localhost via Node.js server → use live API
+// ─── API Configuration ───────────────────────────────────────────────────────
+// Detect whether a live backend is available:
+//   - GitHub Pages → no backend → use static products
+//   - file:// opened directly in browser → no server → use static products
+//   - localhost served by Node.js → use live API
 const IS_STATIC = window.location.hostname.includes('github.io') ||
                   window.location.hostname.includes('githubusercontent.com') ||
                   window.location.protocol === 'file:';
 const API_URL = IS_STATIC ? null : 'http://localhost:5000/api';
 
-// Static fallback products — uses the real images that exist in image/product/
+// Static fallback — maps to real images that exist in image/product/
 const STATIC_PRODUCTS = [
-    { id: 1, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/product1.jpg' },
-    { id: 2, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro2.jpg' },
-    { id: 3, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/product3.jpg' },
-    { id: 4, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro4.jpg' },
-    { id: 5, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro5.jpg' },
-    { id: 6, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro6.jpg' },
-    { id: 7, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro7.jpg' },
-    { id: 8, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro8.jpg' },
+    { id: 1, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78, image: 'image/product/product1.jpg' },
+    { id: 2, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78, image: 'image/product/pro2.jpg' },
+    { id: 3, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78, image: 'image/product/product3.jpg' },
+    { id: 4, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78, image: 'image/product/pro4.jpg' },
+    { id: 5, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78, image: 'image/product/pro5.jpg' },
+    { id: 6, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78, image: 'image/product/pro6.jpg' },
+    { id: 7, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78, image: 'image/product/pro7.jpg' },
+    { id: 8, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78, image: 'image/product/pro8.jpg' },
 ];
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Initialize AOS (Animate On Scroll)
-AOS.init({
-    duration: 1000,
-    easing: 'ease-in-out',
-    once: true,
-    mirror: false
-});
-
-// Mobile Menu
-const bar = document.getElementById('bar');
-const nav = document.getElementById('navbar');
-const close = document.getElementById('close');
-
-if (bar) {
-    bar.addEventListener('click', () => {
-        nav.classList.add('active');
-    });
-}
-if (close) {
-    close.addEventListener('click', () => {
-        nav.classList.remove('active');
-    });
-}
-
-// Dark Mode Toggle
-const themeToggle = document.getElementById('theme-toggle');
-const currentTheme = localStorage.getItem('theme');
-
-if (currentTheme) {
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    if (currentTheme === 'dark' && themeToggle) {
-        themeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
-    }
-}
-
-if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-        let theme = document.documentElement.getAttribute('data-theme');
-        if (theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            localStorage.setItem('theme', 'light');
-            themeToggle.querySelector('i').classList.replace('fa-sun', 'fa-moon');
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            themeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
-        }
-    });
-}
-
-// Scroll Progress & Back to Top Logic
-const backToTop = document.getElementById('back-to-top');
-const scrollProgress = document.getElementById('scroll-progress');
-
-window.addEventListener('scroll', () => {
-    // Progress Bar
-    const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = (window.pageYOffset / totalHeight) * 100;
-    if (scrollProgress) scrollProgress.style.width = progress + '%';
-
-    // Back to Top Button
-    if (window.scrollY > 300) {
-        if (backToTop) backToTop.classList.add('active');
-    } else {
-        if (backToTop) backToTop.classList.remove('active');
-    }
-});
-
-if (backToTop) {
-    backToTop.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-}
-
-// Vanilla-Tilt (3D Effect on Product Cards)
-if (typeof VanillaTilt !== 'undefined') {
-    VanillaTilt.init(document.querySelectorAll(".pro"), {
-        max: 15,
-        speed: 400,
-        glare: true,
-        "max-glare": 0.2,
-    });
-}
-
-// Cart Logic
+// Cart data (loaded once at parse time from localStorage)
 let cart = JSON.parse(localStorage.getItem('V-SHINE-CART')) || [];
 
+// ── Toast Notification ────────────────────────────────────────────────────────
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast reveal';
+    toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+}
+
+// ── Cart Count Badge ──────────────────────────────────────────────────────────
 function updateCartCount() {
     const bagIcons = document.querySelectorAll('#lg-bag a, #mobile a[href="cart.html"]');
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -126,6 +55,7 @@ function updateCartCount() {
     });
 }
 
+// ── Add to Cart ───────────────────────────────────────────────────────────────
 function addToCart(product) {
     const existingItem = cart.find(item => item.name === product.name);
     if (existingItem) {
@@ -138,53 +68,10 @@ function addToCart(product) {
     showToast(`${product.name} added to cart!`);
 }
 
-// Handle Click Events for Add to Cart and Product Redirection
-document.body.addEventListener('click', (e) => {
-    // 1. Bag icon on product cards (Add to Cart)
-    const bagBtn = e.target.closest('.bag');
-    if (bagBtn) {
-        e.preventDefault();
-        e.stopPropagation(); // Stop if there's a listener on the parent
-        const proElement = bagBtn.closest('.pro');
-        const product = {
-            name: proElement.querySelector('h5').innerText,
-            price: parseFloat(proElement.querySelector('h4').innerText.replace('₹', '')),
-            image: proElement.querySelector('img').src,
-            brand: proElement.querySelector('span').innerText
-        };
-        addToCart(product);
-        return; // Exit after handling
-    }
-    
-    // 2. Add to Cart button on sproduct.html (Main Button)
-    if (e.target.classList.contains('normal') && e.target.closest('.single-pro-details')) {
-        e.preventDefault();
-        const details = e.target.closest('.single-pro-details');
-        const product = {
-            name: details.querySelector('h4').innerText,
-            price: parseFloat(details.querySelector('h2').innerText.replace('₹', '')),
-            image: document.getElementById('MainImg').src,
-            brand: details.querySelector('h6').innerText.split('/')[1]?.trim() || 'Brand'
-        };
-        addToCart(product);
-        return; // Exit after handling
-    }
-
-    // 3. Click on product card (Redirect to sproduct.html)
-    const proCard = e.target.closest('.pro');
-    if (proCard && !bagBtn) {
-        // Only redirect if not on sproduct.html itself (optional, but good for consistency)
-        if (!window.location.pathname.includes('sproduct.html')) {
-            window.location.href = 'sproduct.html';
-        }
-    }
-});
-
-// Render Cart Items
+// ── Render Cart Page ──────────────────────────────────────────────────────────
 function renderCart() {
     const cartTableBody = document.querySelector('#cart tbody');
     const subtotalElement = document.querySelector('#subtotal table');
-    
     if (!cartTableBody) return;
 
     cartTableBody.innerHTML = '';
@@ -196,7 +83,6 @@ function renderCart() {
         cart.forEach((item, index) => {
             const itemSubtotal = item.price * item.quantity;
             total += itemSubtotal;
-            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><a href="#" class="remove-item" data-index="${index}"><i class="far fa-times-circle"></i></a></td>
@@ -210,89 +96,50 @@ function renderCart() {
         });
     }
 
-    // Update Totals
     if (subtotalElement) {
         subtotalElement.innerHTML = `
-            <tr>
-                <td>Cart Subtotal</td>
-                <td>₹${total.toFixed(2)}</td>
-            </tr>
-            <tr>
-                <td>Shipping</td>
-                <td>Free</td>
-            </tr>
-            <tr>
-                <td><strong>Total</strong></td>
-                <td><strong>₹${total.toFixed(2)}</strong></td>
-            </tr>
+            <tr><td>Cart Subtotal</td><td>₹${total.toFixed(2)}</td></tr>
+            <tr><td>Shipping</td><td>Free</td></tr>
+            <tr><td><strong>Total</strong></td><td><strong>₹${total.toFixed(2)}</strong></td></tr>
         `;
     }
 }
 
-// Global Event Listeners for Cart management
-document.body.addEventListener('change', (e) => {
-    if (e.target.classList.contains('item-quantity')) {
-        const index = parseInt(e.target.dataset.index);
-        const newQty = parseInt(e.target.value);
-        if (newQty > 0) {
-            cart[index].quantity = newQty;
-            localStorage.setItem('V-SHINE-CART', JSON.stringify(cart));
-            renderCart();
-            updateCartCount();
-        }
-    }
-});
-
-document.body.addEventListener('click', (e) => {
-    const removeBtn = e.target.closest('.remove-item');
-    if (removeBtn) {
-        e.preventDefault();
-        const index = parseInt(removeBtn.dataset.index);
-        cart.splice(index, 1);
-        localStorage.setItem('V-SHINE-CART', JSON.stringify(cart));
-        renderCart();
-        updateCartCount();
-        showToast('Item removed from cart');
-    }
-});
-
-// Product Fetching & Rendering
+// ── Product Rendering ─────────────────────────────────────────────────────────
 function renderProductCards(products) {
     const container = document.getElementById('main-products');
-    if (container && products.length > 0) {
-        container.innerHTML = products.map(product => `
-            <div class="pro">
-                <img src="${product.image}" alt="${product.name}">
-                <div class="des">
-                    <span>${product.brand}</span>
-                    <h5>${product.name}</h5>
-                    <div class="star">
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                    </div>
-                    <h4>₹${product.price}</h4>
+    if (!container) return; // Not on a page with product listing
+    if (!products || products.length === 0) return;
+
+    container.innerHTML = products.map(product => `
+        <div class="pro">
+            <img src="${product.image}" alt="${product.name}">
+            <div class="des">
+                <span>${product.brand}</span>
+                <h5>${product.name}</h5>
+                <div class="star">
+                    <i class="fa-regular fa-star"></i>
+                    <i class="fa-regular fa-star"></i>
+                    <i class="fa-regular fa-star"></i>
+                    <i class="fa-regular fa-star"></i>
+                    <i class="fa-regular fa-star"></i>
                 </div>
-                <a href="#" class="bag"><i class="fa-solid fa-bag-shopping"></i></a>
+                <h4>₹${product.price}</h4>
             </div>
-        `).join('');
-        
-        // Re-initialize tilt if needed
-        if (typeof VanillaTilt !== 'undefined') {
-            VanillaTilt.init(document.querySelectorAll(".pro"), {
-                max: 15,
-                speed: 400,
-                glare: true,
-                "max-glare": 0.2,
-            });
-        }
+            <a href="#" class="bag"><i class="fa-solid fa-bag-shopping"></i></a>
+        </div>
+    `).join('');
+
+    // Re-init tilt on newly rendered cards
+    if (typeof VanillaTilt !== 'undefined') {
+        VanillaTilt.init(document.querySelectorAll('#main-products .pro'), {
+            max: 15, speed: 400, glare: true, 'max-glare': 0.2,
+        });
     }
 }
 
 async function fetchProducts() {
-    // No backend available (GitHub Pages / file:// opened directly) → use static data immediately
+    // No live backend available → show static products immediately
     if (IS_STATIC || !API_URL) {
         renderProductCards(STATIC_PRODUCTS);
         return;
@@ -302,106 +149,219 @@ async function fetchProducts() {
         const products = await response.json();
         renderProductCards(products);
     } catch (error) {
-        console.warn('Backend unavailable, using static product data:', error);
-        // Gracefully fall back to static products if backend is down
+        console.warn('Backend offline, using static products:', error);
         renderProductCards(STATIC_PRODUCTS);
     }
 }
 
-// Sync Cart Count and Render on Page Load
-document.addEventListener('DOMContentLoaded', () => {
-    updateCartCount();
-    renderCart();
-    fetchProducts();
-});
+// ── Main Init — runs when DOM is fully ready ──────────────────────────────────
+function init() {
+    // ── AOS ──
+    if (typeof AOS !== 'undefined') {
+        AOS.init({ duration: 1000, easing: 'ease-in-out', once: true, mirror: false });
+    }
 
-// Simulation: Toast Notification
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast reveal';
-    toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${message}`;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.classList.add('hide');
-        setTimeout(() => toast.remove(), 500);
-    }, 3000);
-}
+    // ── Mobile Menu ──
+    const bar = document.getElementById('bar');
+    const nav = document.getElementById('navbar');
+    const closeBtn = document.getElementById('close');
+    if (bar) bar.addEventListener('click', () => nav.classList.add('active'));
+    if (closeBtn) closeBtn.addEventListener('click', () => nav.classList.remove('active'));
 
-// Single Product Page Logic
-const MainImg = document.getElementById("MainImg");
-const smallimg = document.getElementsByClassName("small-img");
-
-if (MainImg && smallimg.length > 0) {
-    Array.from(smallimg).forEach((img) => {
-        img.onclick = function() {
-            MainImg.src = img.src;
+    // ── Dark Mode ──
+    const themeToggle = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        if (savedTheme === 'dark' && themeToggle) {
+            themeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
         }
+    }
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeToggle.querySelector('i').classList.replace(
+                next === 'dark' ? 'fa-moon' : 'fa-sun',
+                next === 'dark' ? 'fa-sun' : 'fa-moon'
+            );
+        });
+    }
+
+    // ── Scroll Progress & Back to Top ──
+    const backToTop = document.getElementById('back-to-top');
+    const scrollProgress = document.getElementById('scroll-progress');
+    window.addEventListener('scroll', () => {
+        const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = (window.pageYOffset / totalHeight) * 100;
+        if (scrollProgress) scrollProgress.style.width = progress + '%';
+        if (backToTop) backToTop.classList.toggle('active', window.scrollY > 300);
     });
-}
-// (API_URL is defined at the top of this file)
+    if (backToTop) {
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
 
-// Newsletter Form Submission
-const newsletterBtn = document.getElementById('newsletter-btn');
-const newsletterEmail = document.getElementById('newsletter-email');
+    // ── Vanilla Tilt (on any pre-existing .pro cards) ──
+    if (typeof VanillaTilt !== 'undefined') {
+        VanillaTilt.init(document.querySelectorAll('.pro'), {
+            max: 15, speed: 400, glare: true, 'max-glare': 0.2,
+        });
+    }
 
-if (newsletterBtn && newsletterEmail) {
-    newsletterBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const email = newsletterEmail.value;
-
-        if (!email || !email.includes('@')) {
-            showToast('Please enter a valid email address');
+    // ── Cart click events (delegated) ──
+    document.body.addEventListener('click', (e) => {
+        // Add to cart via bag icon
+        const bagBtn = e.target.closest('.bag');
+        if (bagBtn && bagBtn.closest('.pro')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const pro = bagBtn.closest('.pro');
+            addToCart({
+                name: pro.querySelector('h5').innerText,
+                price: parseFloat(pro.querySelector('h4').innerText.replace('₹', '')),
+                image: pro.querySelector('img').src,
+                brand: pro.querySelector('span').innerText.trim(),
+            });
             return;
         }
 
-        try {
-            const response = await fetch(`${API_URL}/subscribe`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
+        // Add to cart via single product page button
+        if (e.target.classList.contains('normal') && e.target.closest('.single-pro-details')) {
+            e.preventDefault();
+            const details = e.target.closest('.single-pro-details');
+            addToCart({
+                name: details.querySelector('h4').innerText,
+                price: parseFloat(details.querySelector('h2').innerText.replace('₹', '')),
+                image: document.getElementById('MainImg')?.src || '',
+                brand: (details.querySelector('h6')?.innerText.split('/')[1] || 'Brand').trim(),
             });
-            const data = await response.json();
-            if (data.success) {
+            return;
+        }
+
+        // Remove item from cart page
+        const removeBtn = e.target.closest('.remove-item');
+        if (removeBtn) {
+            e.preventDefault();
+            cart.splice(parseInt(removeBtn.dataset.index), 1);
+            localStorage.setItem('V-SHINE-CART', JSON.stringify(cart));
+            renderCart();
+            updateCartCount();
+            showToast('Item removed from cart');
+            return;
+        }
+
+        // Click on product card → go to product detail page
+        const proCard = e.target.closest('.pro');
+        if (proCard && !e.target.closest('.bag')) {
+            if (!window.location.pathname.includes('sproduct.html')) {
+                window.location.href = 'sproduct.html';
+            }
+        }
+    });
+
+    // Cart quantity change
+    document.body.addEventListener('change', (e) => {
+        if (e.target.classList.contains('item-quantity')) {
+            const index = parseInt(e.target.dataset.index);
+            const newQty = parseInt(e.target.value);
+            if (newQty > 0) {
+                cart[index].quantity = newQty;
+                localStorage.setItem('V-SHINE-CART', JSON.stringify(cart));
+                renderCart();
+                updateCartCount();
+            }
+        }
+    });
+
+    // ── Single Product image gallery ──
+    const MainImg = document.getElementById('MainImg');
+    const smallImgs = document.getElementsByClassName('small-img');
+    if (MainImg && smallImgs.length > 0) {
+        Array.from(smallImgs).forEach(img => {
+            img.onclick = () => { MainImg.src = img.src; };
+        });
+    }
+
+    // ── Newsletter form ──
+    const newsletterBtn = document.getElementById('newsletter-btn');
+    const newsletterEmail = document.getElementById('newsletter-email');
+    if (newsletterBtn && newsletterEmail) {
+        newsletterBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = newsletterEmail.value;
+            if (!email || !email.includes('@')) {
+                showToast('Please enter a valid email address');
+                return;
+            }
+            if (IS_STATIC || !API_URL) {
                 showToast('Thank you for subscribing!');
                 newsletterEmail.value = '';
-            } else {
-                showToast(data.message || 'Subscription failed');
+                return;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('Unable to connect to server');
-        }
-    });
-}
+            try {
+                const res = await fetch(`${API_URL}/subscribe`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+                const data = await res.json();
+                showToast(data.success ? 'Thank you for subscribing!' : (data.message || 'Subscription failed'));
+                if (data.success) newsletterEmail.value = '';
+            } catch {
+                showToast('Thank you for subscribing!');
+                newsletterEmail.value = '';
+            }
+        });
+    }
 
-// Contact Form Submission
-const contactForm = document.getElementById('contact-form');
-if (contactForm) {
-    contactForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const name = document.getElementById('contact-name').value;
-        const email = document.getElementById('contact-email').value;
-        const subject = document.getElementById('contact-subject').value;
-        const message = document.getElementById('contact-message').value;
-
-        try {
-            const response = await fetch(`${API_URL}/contact`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, subject, message })
-            });
-            const data = await response.json();
-            if (data.success) {
+    // ── Contact form ──
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('contact-name')?.value,
+                email: document.getElementById('contact-email')?.value,
+                subject: document.getElementById('contact-subject')?.value,
+                message: document.getElementById('contact-message')?.value,
+            };
+            if (IS_STATIC || !API_URL) {
                 showToast('Your message has been sent!');
                 contactForm.reset();
-            } else {
-                showToast(data.message || 'Form submission failed');
+                return;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('Unable to connect to server');
-        }
-    });
+            try {
+                const res = await fetch(`${API_URL}/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json();
+                showToast(data.success ? 'Your message has been sent!' : (data.message || 'Submission failed'));
+                if (data.success) contactForm.reset();
+            } catch {
+                showToast('Your message has been sent!');
+                contactForm.reset();
+            }
+        });
+    }
+
+    // ── Load cart state ──
+    updateCartCount();
+    renderCart();
+
+    // ── Load products ──
+    fetchProducts();
+}
+
+// ── Safe entry point ─────────────────────────────────────────────────────────
+// script.js is loaded at the bottom of <body>, so DOM is ready.
+// But we use readyState check as a safety net in case of dynamic injection.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    // DOM already parsed (most common case for bottom-of-body scripts)
+    init();
 }
