@@ -1,20 +1,23 @@
 // ─── API Configuration (MUST be at top before any usage) ───────────────────
-// Detect environment: if running on GitHub Pages, use static fallback data
-// If running locally with the Node.js server, use localhost API
-const IS_GITHUB_PAGES = window.location.hostname.includes('github.io') || 
-                        window.location.hostname.includes('githubusercontent.com');
-const API_URL = IS_GITHUB_PAGES ? null : 'http://localhost:5000/api';
+// Detect environment so we know whether a live backend is available:
+//   - GitHub Pages  → no backend → use static fallback
+//   - file:// protocol (opened directly in browser) → no server → use static fallback
+//   - localhost via Node.js server → use live API
+const IS_STATIC = window.location.hostname.includes('github.io') ||
+                  window.location.hostname.includes('githubusercontent.com') ||
+                  window.location.protocol === 'file:';
+const API_URL = IS_STATIC ? null : 'http://localhost:5000/api';
 
-// Static fallback products shown on GitHub Pages (no backend available)
+// Static fallback products — uses the real images that exist in image/product/
 const STATIC_PRODUCTS = [
-    { id: 1, name: 'Diamond Ring', brand: 'V-SHINE', price: 4999, image: 'image/f1.jpg' },
-    { id: 2, name: 'Gold Necklace', brand: 'V-SHINE', price: 7499, image: 'image/f2.jpg' },
-    { id: 3, name: 'Pearl Earrings', brand: 'V-SHINE', price: 2499, image: 'image/f3.jpg' },
-    { id: 4, name: 'Silver Bracelet', brand: 'V-SHINE', price: 1999, image: 'image/f4.jpg' },
-    { id: 5, name: 'Ruby Pendant', brand: 'V-SHINE', price: 5999, image: 'image/b1.jpg' },
-    { id: 6, name: 'Sapphire Ring', brand: 'V-SHINE', price: 8999, image: 'image/b2.jpg' },
-    { id: 7, name: 'Emerald Bangle', brand: 'V-SHINE', price: 3499, image: 'image/g1.jpg' },
-    { id: 8, name: 'Platinum Chain', brand: 'V-SHINE', price: 11999, image: 'image/g2.jpg' },
+    { id: 1, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/product1.jpg' },
+    { id: 2, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro2.jpg' },
+    { id: 3, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/product3.jpg' },
+    { id: 4, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro4.jpg' },
+    { id: 5, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro5.jpg' },
+    { id: 6, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro6.jpg' },
+    { id: 7, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro7.jpg' },
+    { id: 8, name: 'Cartoon Astronaut T-Shirt', brand: 'Adidas', price: 78,  image: 'image/product/pro8.jpg' },
 ];
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -289,8 +292,8 @@ function renderProductCards(products) {
 }
 
 async function fetchProducts() {
-    // If on GitHub Pages (no backend), use static fallback data
-    if (IS_GITHUB_PAGES || !API_URL) {
+    // No backend available (GitHub Pages / file:// opened directly) → use static data immediately
+    if (IS_STATIC || !API_URL) {
         renderProductCards(STATIC_PRODUCTS);
         return;
     }
